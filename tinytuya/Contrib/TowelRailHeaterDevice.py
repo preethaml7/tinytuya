@@ -21,7 +21,7 @@ from tinytuya.core import Device
         set_timer()                        # expects number of minutes
     Inherited
         json = status()                    # returns json payload
-        set_version(version)               # 3.1 [default] or 3.3
+        set_version(version)               # protocol version (defaults to 3.4 for this device)
         set_socketPersistent(False/True)   # False [default] or True
         set_socketNODELAY(False/True)      # False or True [default]
         set_socketRetryLimit(integer)      # retry count limit [default 5]
@@ -63,7 +63,7 @@ class TowelRailHeaterDevice(Device):
         super(TowelRailHeaterDevice, self).__init__(*args, **kwargs)
 
     def status_json(self):
-        """Wrapper around status() that replace DPS indices with human readable labels."""
+        """Wrapper around status() that replaces DPS indices with human readable labels."""
         status = self.status()["dps"]
         return {
             "Power On": status[self.DPS_POWER],
@@ -74,10 +74,10 @@ class TowelRailHeaterDevice(Device):
         }
 
     def tuya_temperature_to_celsius(self, temperature):
-        return int(temperature / 10)
+        return round(float(temperature) / 10, 1)
 
     def celsius_to_tuya_temperature(self, temperature):
-        return int(temperature * 10)
+        return int(round(float(temperature) * 10))
 
     def get_current_temperature(self):
         status = self.status()["dps"]
@@ -99,7 +99,8 @@ class TowelRailHeaterDevice(Device):
         if not is_float(t):
             return
 
-        self.set_value(self.DPS_SET_TEMP, self.celsius_to_tuya_temperature(t))
+        target = float(t)
+        self.set_value(self.DPS_SET_TEMP, self.celsius_to_tuya_temperature(target))
 
     def get_operating_mode(self):
         status = self.status()["dps"]
